@@ -4,11 +4,13 @@ import helmet from "helmet";
 import morgan from "morgan";
 import dotenv from "dotenv";
 
+import connectDB from "./src/config/db.js";
 import taskRoutes from "./src/routes/taskRoutes.js";
 import { errorHandler }
 from "./src/middleware/errorHandler.js";
 
 dotenv.config();
+connectDB();
 
 const app = express();
 
@@ -23,7 +25,8 @@ app.use(express.json());
 app.get("/", (req, res) => {
   res.status(200).json({
     name: "TaskFlow Lite API",
-    version: "1.0.0",
+    version: "2.0.0",
+    database: "MongoDB",
     status: "Running",
     endpoints: {
       getAllTasks: "/api/tasks",

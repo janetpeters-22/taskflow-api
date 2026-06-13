@@ -1,106 +1,135 @@
-import { tasks } from "../data/tasks.js";
-
-let nextId = 2;
+import Task from "../models/Task.js";
 
 // GET ALL TASKS
-export const getAllTasks = (req, res) => {
-  res.status(200).json(tasks);
+export const getAllTasks = async (req, res) => {
+  try {
+    const tasks = await Task.find().sort({
+      createdAt: -1,
+    });
+
+    res.status(200).json(tasks);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
 };
 
 // GET TASK BY ID
-export const getTaskById = (req, res) => {
-  const task = tasks.find(
-    task => task.id === Number(req.params.id)
-  );
+export const getTaskById = async (
+  req,
+  res
+) => {
+  try {
+    const task = await Task.findById(
+      req.params.id
+    );
 
-  if (!task) {
-    return res.status(404).json({
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        message: "Task not found",
+      });
+    }
+
+    res.status(200).json(task);
+  } catch (error) {
+    res.status(500).json({
       success: false,
-      message: "Task not found"
+      message: error.message,
     });
   }
-
-  res.status(200).json(task);
 };
 
 // CREATE TASK
-export const createTask = (req, res) => {
-  const {
-    text,
-    priority,
-    dueDate
-  } = req.body;
+export const createTask = async (
+  req,
+  res
+) => {
+  try {
+    const {
+      text,
+      priority,
+      dueDate,
+    } = req.body;
 
-  const newTask = {
-    id: nextId++,
-    text,
-    completed: false,
-    priority: priority || "Medium",
-    dueDate: dueDate || "",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  };
+    const newTask = await Task.create({
+      text,
+      priority,
+      dueDate,
+    });
 
-  tasks.push(newTask);
-
-  res.status(201).json(newTask);
+    res.status(201).json(newTask);
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
 };
 
 // UPDATE TASK
-export const updateTask = (req, res) => {
-  const task = tasks.find(
-    task => task.id === Number(req.params.id)
-  );
+export const updateTask = async (
+  req,
+  res
+) => {
+  try {
+    const updatedTask =
+      await Task.findByIdAndUpdate(
+        req.params.id,
+        req.body,
+        {
+          new: true,
+          runValidators: true,
+        }
+      );
 
-  if (!task) {
-    return res.status(404).json({
+    if (!updatedTask) {
+      return res.status(404).json({
+        success: false,
+        message: "Task not found",
+      });
+    }
+
+    res.status(200).json(
+      updatedTask
+    );
+  } catch (error) {
+    res.status(500).json({
       success: false,
-      message: "Task not found"
+      message: error.message,
     });
   }
-
-  const {
-    title,
-    description,
-    priority,
-    completed
-  } = req.body;
-
-  if (title !== undefined)
-    task.title = title;
-
-  if (description !== undefined)
-    task.description = description;
-
-  if (priority !== undefined)
-    task.priority = priority;
-
-  if (completed !== undefined)
-    task.completed = completed;
-
-  task.updatedAt =
-    new Date().toISOString();
-
-  res.status(200).json(task);
 };
 
 // DELETE TASK
-export const deleteTask = (req, res) => {
-  const index = tasks.findIndex(
-    task => task.id === Number(req.params.id)
-  );
+export const deleteTask = async (
+  req,
+  res
+) => {
+  try {
+    const deletedTask =
+      await Task.findByIdAndDelete(
+        req.params.id
+      );
 
-  if (index === -1) {
-    return res.status(404).json({
+    if (!deletedTask) {
+      return res.status(404).json({
+        success: false,
+        message: "Task not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message:
+        "Task deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
       success: false,
-      message: "Task not found"
+      message: error.message,
     });
   }
-
-  tasks.splice(index, 1);
-
-  res.status(200).json({
-    success: true,
-    message: "Task deleted successfully"
-  });
 };
